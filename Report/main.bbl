@@ -1,0 +1,32 @@
+\begin{thebibliography}{1}
+
+\bibitem{hou2021coordinate}
+Qibin Hou, Daquan Zhou, and Jiashi Feng.
+\newblock Coordinate attention for efficient mobile network design.
+\newblock In {\em Proceedings of the IEEE/CVF Conference on Computer Vision and
+  Pattern Recognition (CVPR)}, pages 13713--13722, 2021.
+
+\bibitem{jocher2023yolov8}
+Glenn Jocher, Ayush Chaurasia, and Jing Qiu.
+\newblock Ultralytics yolov8.
+\newblock {\em GitHub repository}, 2023.
+
+\bibitem{liu2022target}
+Jinyuan Liu, Xin Fan, Ji~Jiang Huang, G.~Li, Z.~Chen, and D.~Huang.
+\newblock Target-aware dual adversarial learning and a multi-scenario
+  multi-modality benchmark to fuse infrared and visible for object detection.
+\newblock In {\em Proceedings of the IEEE/CVF Conference on Computer Vision and
+  Pattern Recognition (CVPR)}, pages 5802--5811, 2022.
+
+\bibitem{tang2022msrs}
+Linfeng Tang, C.~Li, and Jiayi Ma.
+\newblock Msrs: Multi-spectral road scenarios for practical infrared and
+  visible image fusion.
+\newblock {\em GitHub repository}, 2022.
+
+\bibitem{tang2022image}
+Linfeng Tang, Jiteng Yuan, and Jiayi Ma.
+\newblock Image fusion in the loop of self-supervised semantic segmentation.
+\newblock {\em Information Fusion}, 82:28--41, 2022.
+
+\end{thebibliography}

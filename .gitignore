@@ -31,3 +31,6 @@ venv/
 
 # Logs
 *.log
+
+# Dataset
+SourceCode/Dataset/MSRS/

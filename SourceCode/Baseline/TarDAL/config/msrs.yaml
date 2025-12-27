@@ -18,13 +18,13 @@ strategy : fuse & detect
 fuse     :
   dim       : 32 # features base dimensions for generator and discriminator
   depth     : 3 # depth of dense architecture
-  pretrained: weights/v1/tardal-dt.pth # ~: disable, path or url: load with pretrained parameters
+  pretrained: weights/v1/tardal-ct.pth # ~: disable, path or url: load with pretrained parameters
 
 # detect network settings: available if framework in joint mode (detect, fuse + detect)
 detect   :
   model     : yolov5s # yolo model (yolov5 n,s,m,l,x)
   channels  : 3 # input channels (3: rgb or 1: grayscale)
-  pretrained: weights/v1/tardal-dt.pth # ~: disable, path or url: load with pretrained parameters
+  pretrained: ~ # ~: disable, path or url: load with pretrained parameters
 
 # saliency network settings: generating mask for training tardal
 saliency :
@@ -53,7 +53,7 @@ dataset  :
 train    :
   image_size   : [ 480, 640 ] # MSRS images are roughly this size. Resize to this.
   batch_size   : 8 # Reduce batch size for safety on 3060
-  num_workers  : 4 
+  num_workers  : 0 # number of workers used in data loading 
   epochs       : 100 
   eval_interval: 5 
   save_interval: 10 
@@ -62,7 +62,7 @@ train    :
 # inference settings:
 inference:
   batch_size : 8 
-  num_workers: 8 
+  num_workers: 0 # number of workers used in data loading 
   use_eval   : true 
   grayscale  : false 
   save_txt   : true 

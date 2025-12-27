@@ -93,7 +93,12 @@ class Fuse:
             f_ckpt.pop('use_eval')
 
         # load state dict
-        self.generator.load_state_dict(f_ckpt)
+        logging.info(f"Loading state dict. Model keys: {list(self.generator.state_dict().keys())[:3]}")
+        logging.info(f"Ckpt keys: {list(f_ckpt.keys())[:3]}")
+        logging.info("Loading with strict=False")
+        print("DEBUG: Calling load_state_dict with strict=False")
+        self.generator.load_state_dict(f_ckpt, strict=False)
+
         if self.mode == 'train' and 'disc' in ckpt:
             self.dis_t.load_state_dict(ckpt['disc']['t'])
             self.dis_d.load_state_dict(ckpt['disc']['d'])

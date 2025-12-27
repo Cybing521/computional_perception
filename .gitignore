@@ -1,0 +1,33 @@
+# OS specific
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Editor directories and files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.env
+
+# LaTeX
+*.aux
+*.out
+*.toc
+*.log
+*.synctex.gz
+*.fls
+*.fdb_latexmk
+
+# Logs
+*.log

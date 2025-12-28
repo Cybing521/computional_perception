@@ -12,3 +12,4 @@ def create_placeholder(path, text):
 if __name__ == '__main__':
     create_placeholder('Report/images/tardal_arch.png', 'TarDAL Architecture Diagram')
     create_placeholder('Report/images/msrs_result.png', 'Baseline Inference Result')
+    create_placeholder('Report/images/placeholder_feature_map.png', 'Attention Feature Map Visualization')

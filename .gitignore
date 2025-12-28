@@ -33,7 +33,7 @@ venv/
 *.log
 
 # Dataset
-SourceCode/Dataset/MSRS/
+# SourceCode/Dataset/MSRS/
 SourceCode/Baseline/TarDAL/weights/
 SourceCode/Baseline/TarDAL/runs/
 SourceCode/Baseline/TarDAL/cache/

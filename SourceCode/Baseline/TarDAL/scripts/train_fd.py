@@ -27,6 +27,7 @@ from tools.dict_to_device import dict_to_device
 
 class TrainFD:
     def __init__(self, config: str | Path | ConfigDict, wandb_key: str):
+        print("DEBUG: TrainFD initialized. Starting setup...")
         # init logger
         log_f = '%(asctime)s | %(filename)s[line:%(lineno)d] | %(levelname)s | %(message)s'
         logging.basicConfig(level='INFO', format=log_f)
@@ -47,7 +48,9 @@ class TrainFD:
         # wandb run
         if wandb_key:
             wandb.login(key=wandb_key)  # wandb api key
+        print("DEBUG: Initializing wandb...")
         runs = wandb.init(project='TarDAL-v1', config=config, mode=config.debug.wandb_mode)
+        print("DEBUG: wandb initialized.")
         self.runs = runs
 
         # init save folder
@@ -57,6 +60,7 @@ class TrainFD:
         logging.info(f'model weights will be saved to {str(save_dir)}')
 
         # load dataset
+        logging.info("Initializing Dataset... This may take a few minutes if generating masks/IQA.")
         data_t = getattr(loader, config.dataset.name)
         self.data_t = data_t
         t_dataset = data_t(root=config.dataset.root, mode='train', config=config)
@@ -312,6 +316,7 @@ class TrainFD:
 
 
 if __name__ == '__main__':
+    print("DEBUG: Script started.", flush=True)
     parser = argparse.ArgumentParser()
     parser.add_argument('--cfg', default='config/default.yaml', help='config file path')
     parser.add_argument('--auth', help='wandb auth api key')

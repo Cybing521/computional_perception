@@ -67,8 +67,10 @@ class MSRS(Dataset):
         match mode:
             case 'train' | 'val':
                 # check mask cache
+                logging.info(f"Checking/Generating Saliency Masks for {len(img_list)} images...")
                 check_mask(self.root, img_list, config)
                 # check iqa cache
+                logging.info(f"Checking/Generating IQA weights for {len(img_list)} images...")
                 check_iqa(self.root, img_list, config)
             case _:
                 # get max shape

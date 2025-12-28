@@ -6,7 +6,7 @@ save_dir : 'cache' # folder used for saving the model, logs results
 debug    :
   log       : INFO # log level
   wandb_mode: 'disabled' # wandb connection mode (disabled for local dev)
-  fast_run  : true # use a small subset of the dataset for debugging code
+  fast_run  : false # use a small subset of the dataset for debugging code
 
 # framework training strategy:
 #   backward method: fuse (direct training DT)

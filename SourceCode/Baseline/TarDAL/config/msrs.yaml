@@ -18,7 +18,7 @@ strategy : fuse & detect
 fuse     :
   dim       : 32 # features base dimensions for generator and discriminator
   depth     : 3 # depth of dense architecture
-  pretrained: weights/v1/tardal-ct.pth # ~: disable, path or url: load with pretrained parameters
+  pretrained: cache/ne6uj72k/00080-0.0218.pth # 使用你训练好的模型
 
 # detect network settings: available if framework in joint mode (detect, fuse + detect)
 detect   :

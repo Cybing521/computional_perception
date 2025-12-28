@@ -186,9 +186,11 @@ def evaluate_single_image(fused_path, ir_path, vi_path):
 
 def main():
     # 路径配置
-    fused_dir = Path('/root/computional_perception/SourceCode/Baseline/TarDAL/output/msrs/images')
-    ir_dir = Path('/root/computional_perception/SourceCode/Baseline/TarDAL/../../Dataset/MSRS/test/ir')
-    vi_dir = Path('/root/computional_perception/SourceCode/Baseline/TarDAL/../../Dataset/MSRS/test/vi')
+    # 路径配置
+    current_dir = Path(__file__).parent.resolve()
+    fused_dir = current_dir / 'output/msrs/images'
+    ir_dir = current_dir.parent.parent / 'Dataset/MSRS/test/ir'
+    vi_dir = current_dir.parent.parent / 'Dataset/MSRS/test/vi'
     
     # 获取所有融合图像
     fused_images = sorted(fused_dir.glob('*.png'))
@@ -229,7 +231,7 @@ def main():
             avg_val = np.mean(values)
             min_val = np.min(values)
             max_val = np.max(values)
-            results[metric] = {'avg': avg_val, 'min': min_val, 'max': max_val}
+            results[metric] = {'avg': float(avg_val), 'min': float(min_val), 'max': float(max_val)}
             print(f"{metric:<12} {avg_val:<12.4f} {min_val:<12.4f} {max_val:<12.4f}")
         
         print("\n" + "=" * 60)

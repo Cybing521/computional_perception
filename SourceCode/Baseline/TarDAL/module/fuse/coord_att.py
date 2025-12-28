@@ -61,4 +61,8 @@ class CoordAtt(nn.Module):
 
         out = identity * a_h * a_w
 
+        # Visualization hook
+        self.last_attn_h = a_h.detach().cpu()
+        self.last_attn_w = a_w.detach().cpu()
+
         return out

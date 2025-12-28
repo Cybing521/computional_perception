@@ -166,7 +166,13 @@ def plot_attention_heatmap(model_path, img_ir, img_vi, output_dir):
     
     # Load model
     model = Generator(dim=32, depth=3).to(device)
-    model.load_state_dict(torch.load(model_path, map_location=device))
+    checkpoint = torch.load(model_path, map_location=device)
+    # Handle different checkpoint formats
+    if 'fuse' in checkpoint:
+        # Full checkpoint with fuse, disc, detect keys
+        model.load_state_dict(checkpoint['fuse'])
+    else:
+        model.load_state_dict(checkpoint)
     model.eval()
     
     # Preprocess

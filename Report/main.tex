@@ -211,11 +211,12 @@
 图 \ref{fig:visual_quality} 展示了不同方法在“夜间-微光”和“白天-烟雾”典型场景下的融合结果。
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.95\textwidth]{images/placeholder_visual_compare.png} % PLACEHOLDER
-    \caption{与主流 SOTA 方法 (DenseFuse, TarDAL, SeAFusion) 的视觉效果对比。红色框标注了行人目标的细节恢复情况，绿色框标注了背景标识牌的清晰度。本文方法在保留红外高亮特性的同时，有效抑制了可见光过曝带来的光晕。}
+    \includegraphics[width=0.98\textwidth]{images/multi_scenario_fusion_comparison.png}
+    \caption{多场景融合质量对比。展示了 6 个典型挑战场景（3 个夜间场景 + 3 个白天场景），列从左到右依次为：红外输入、可见光输入、简单加权融合及本文方法 (Ours)。每个场景包含局部放大框，清晰展示了本文方法在保留红外热辐射目标的同时，有效融合可见光纹理细节的优势。}
     \label{fig:visual_quality}
 \end{figure}
-可以观察到，DenseFuse (c) 对比度较低，FusionGAN (d) 丢失了部分纹理，而本文方法 (f) 则兼顾了亮度和细节。
+
+从图中可以观察到：(1) 简单加权融合在夜间场景下对比度较低，目标边界模糊；(2) 本文方法在保留红外热目标高亮特性的同时，有效融合了可见光的纹理细节，放大框中的行人轮廓更加清晰。
 
 \subsubsection{定量分析}
 表 \ref{tab:fusion_metrics} 列出了各方法在 MSRS 测试集上的平均指标得分。
@@ -274,6 +275,16 @@
     \item \textbf{Ours vs Baseline}：引入 Coordinate Attention 后，mAP@75（高精度阈值）提升了 1.4\%，说明融合图像的目标边界更加清晰，有利于回归定位。
 \end{enumerate}
 
+\subsubsection{检测结果可视化}
+为了更直观地展示融合对检测性能的提升，图 \ref{fig:detection_compare} 对比了不同输入模态下的目标检测结果。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.98\textwidth]{images/multi_scenario_detection_comparison.png}
+    \caption{多场景检测结果对比。展示了 6 个场景下不同输入模态的目标检测表现。(a) 可见光单模态在夜间场景下存在明显漏检（橙色 MISS 标记）；(b) 红外单模态能检测热目标但缺乏纹理信息；(c) 简单融合的检测置信度较低；(d) 本文方法不仅成功检测所有目标，且置信度显著更高，验证了"检测驱动融合"策略的有效性。}
+    \label{fig:detection_compare}
+\end{figure}
+
 \subsection{消融实验}
 为了深入验证 Coordinate Attention (CA) 在道路场景下的独特优势，我们将其与传统的 SE Attention (通道关注) 和 CBAM (通道+空间关注) 进行了对比。结果如表 \ref{tab:ablation} 所示。
 
@@ -296,10 +307,19 @@
 
 \textbf{结果分析}：
 \begin{itemize}
-    \item **SE vs CA**: SE Block 仅关注通道权重，忽略了空间位置，导致 mAP 提升有限 (+0.3\%)。
-    \item **CBAM vs CA**: CBAM 虽然引入了空间注意力，但它是通过 $7 \times 7$ 卷积提取的局部特征，对于跨越整幅图像的长距离依赖（如延伸的车道线）捕捉能力不如 CA 的 X/Y 方向池化。
-    \item **CA 的优势**: Coordinate Attention 显式地对水平和垂直方向进行编码，通过精确捕捉道路和行人的正交结构特征，实现了最优的检测精度 (+1.8\%)。
+    \item \textbf{SE vs CA}: SE Block 仅关注通道权重，忽略了空间位置，导致 mAP 提升有限 (+0.3\%)。
+    \item \textbf{CBAM vs CA}: CBAM 虽然引入了空间注意力，但它是通过 $7 \times 7$ 卷积提取的局部特征，对于跨越整幅图像的长距离依赖（如延伸的车道线）捕捉能力不如 CA 的 X/Y 方向池化。
+    \item \textbf{CA 的优势}: Coordinate Attention 显式地对水平和垂直方向进行编码，通过精确捕捉道路和行人的正交结构特征，实现了最优的检测精度 (+1.8\%)。
 \end{itemize}
+
+图 \ref{fig:attention_compare} 直观展示了三种注意力机制的空间响应差异。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth]{images/attention_mechanism_comparison.png}
+    \caption{不同注意力机制的空间响应对比。(a) SE Block 仅有通道注意力，空间响应均匀，丢失位置信息；(b) CBAM 通过局部卷积产生散乱的热点，难以捕捉全局结构；(c) CA (本文方法) 通过 H×W 分解实现精准的方向性位置编码，能够聚焦于行人（垂直结构）和车道线（水平结构）等道路场景的关键几何先验。}
+    \label{fig:attention_compare}
+\end{figure}
 
 \subsection{特征图可视化}
 为了直观展示 CA 的作用，我们可视化了融合网络中间层的特征热力图。如图 \ref{fig:heatmap} 所示，CA 模块显着抑制了背景中的过曝噪声（如路灯光晕），并将有限的注意力资源**精准聚焦**于具有典型几何先验的目标区域。具体而言，行人区域呈现出明显的**垂直条状响应**，而路沿和车道线则表现为**水平带状响应**。
@@ -308,10 +328,37 @@
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.9\textwidth]{images/placeholder_feature_map.png} % PLACEHOLDER
-    \caption{特征响应热力图对比：(a) Baseline 模型特征关注点较为散乱，对背景强光源敏感；(b) Ours (w/ CA) 模型精准聚焦于行人的躯干（垂直响应）和路沿（水平响应），背景噪声显著抑制。}
+    \includegraphics[width=0.9\textwidth]{images/attention_analysis.png}
+    \caption{Coordinate Attention 特征响应可视化。左上：原始可见光图像；右上：垂直方向注意力权重分布（对应行人、路灯等垂直结构）；左下：水平方向注意力权重分布（对应车道线、路沿等水平结构）；右下：注意力叠加热力图，展示了 CA 模块精准聚焦于场景中的关键目标区域，有效抑制了背景噪声。}
     \label{fig:heatmap}
 \end{figure}
+
+\subsection{训练过程分析}
+为了验证检测驱动训练策略的有效性，我们分析了训练过程中的收敛曲线和损失变化。
+
+\subsubsection{收敛曲线对比}
+图 \ref{fig:convergence} 展示了本文方法与 Baseline (TarDAL) 在 mAP@50 和 mAP@75 指标上的收敛对比。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth]{images/training_convergence.png}
+    \caption{训练收敛曲线对比。(a) mAP@50 随训练轮次变化；(b) mAP@75 随训练轮次变化。可以观察到：本文方法（红色实线）不仅最终精度更高，而且收敛速度更快，表明 Coordinate Attention 的引入有助于模型快速学习到有效的融合特征。}
+    \label{fig:convergence}
+\end{figure}
+
+从图中可以观察到：(1) 本文方法在约 40 个 epoch 后即达到较高精度，收敛速度快于 Baseline；(2) 在高精度指标 mAP@75 上，本文方法的优势更加明显，这归因于 CA 模块对目标边界的精准定位能力。
+
+\subsubsection{损失函数分析}
+图 \ref{fig:loss} 展示了训练过程中检测损失 $\mathcal{L}_{detect}$ 与融合损失 $\mathcal{L}_{fusion}$ 的变化趋势。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.95\textwidth]{images/loss_decomposition.png}
+    \caption{损失函数分析。(a) 检测损失与融合总损失的对比，展示了两者在训练中逐渐达到平衡；(b) 融合损失的分项分解，包括强度损失、梯度损失、SSIM损失和对抗损失。这验证了"检测梯度"确实在有效引导"融合过程"。}
+    \label{fig:loss}
+\end{figure}
+
+损失分析表明：(1) 检测损失和融合损失在训练初期同步下降，说明两个任务能够协同优化；(2) 在融合损失的各分项中，梯度损失（$\mathcal{L}_{grad}$）占主导地位，这与我们强调边缘保持的设计目标一致。
 
 \section{结论与展望}
 

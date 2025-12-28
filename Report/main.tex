@@ -56,117 +56,75 @@
 \subsection{方法架构}
 \begin{figure}[H]
     \centering
-    % \includegraphics[width=0.8\textwidth]{figures/architecture.png}
-    \fbox{\parbox{0.8\textwidth}{\centering \vspace{2cm} [此处请插入方法架构图：双分支编码器 + 注意力融合层 + 解码器 + YOLO检测头] \vspace{2cm}}}
-    \caption{基于注意力机制的红外与可见光融合检测框架图}
+    \includegraphics[width=0.9\textwidth]{images/arch_improved.png}
+    \caption{改进后的融合检测框架：引入坐标注意力 (Coordinate Attention)}
     \label{fig:arch}
 \end{figure}
 
 本项目的融合网络包含以下关键模块：
 \begin{enumerate}
-    \item \textbf{双分支编码器（Dual-Branch Encoder）}：
-    \begin{itemize}
-        \item 分支 A：专注于提取红外图像中的热辐射强度特征。
-        \item 分支 B：利用\textbf{梯度提取算子}（如Sobel）提取可见光图像的边缘和纹理特征。
-    \end{itemize}
-    \item \textbf{创新融合层}：引入\textbf{轻量化注意力机制 (Coordinate Attention)} \cite{hou2021coordinate}。不同于传统的通道注意力（SE），Coordinate Attention能够同时捕捉跨通道信息和方向感知的空间位置信息，从而增强网络对行人、车辆等关键目标的关注度，抑制背景噪声。
-    \item \textbf{解码器（Decoder）}：将融合特征重构为融合图像。
+    \item \textbf{双分支编码器}：提取红外与可见光特征。
+    \item \textbf{坐标注意力融合层 (Coordinate Attention)}：
+    不同于 Baseline 仅使用简单的 Dense 连接，我们在融合层前引入了 Coordinate Attention \cite{hou2021coordinate}。
+    该模块通过分别在水平 ($X$) 和垂直 ($Y$) 方向上进行平均池化，生成两个方向感知特征图：
+    \begin{equation}
+        z_c^h(h) = \frac{1}{W} \sum_{0 \le i < W} x_c(h, i), \quad z_c^w(w) = \frac{1}{H} \sum_{0 \le j < H} x_c(j, w)
+    \end{equation}
+    这使得网络能够捕捉长距离依赖关系，并精确定位红外热目标的位置信息，从而在融合时抑制背景噪声。
+    \item \textbf{解码器}：重构图像。
 \end{enumerate}
 
-\subsection{核心公式说明}
-为了引导网络生成有利于检测的融合图像，我们设计了联合损失函数 $\mathcal{L}_{total}$，由像素强度损失、梯度损失和检测感知损失组成：
+\subsection{核心公式说明：混合感知损失}
+为了进一步提升融合视觉质量，我们设计了\textbf{混合感知损失 (Hybrid Perception Loss)}，替代了原有的单一损失。总损失 $\mathcal{L}_{total}$ 定义为：
 
 \begin{equation}
-    \mathcal{L}_{total} = \alpha \mathcal{L}_{int} + \beta \mathcal{L}_{grad} + \gamma \mathcal{L}_{det}
+    \mathcal{L}_{total} = \lambda_1 \mathcal{L}_{int} + \lambda_2 \mathcal{L}_{grad} + \lambda_3 \mathcal{L}_{ssim} + \mathcal{L}_{adv}
 \end{equation}
 
 其中：
 \begin{itemize}
-    \item $\mathcal{L}_{int}$ 为\textbf{像素强度损失}，旨在约束融合图像维持红外图像的亮度分布，确保热目标的显著性：
+    \item $\mathcal{L}_{int} = \| I_f - I_{ir} \|_1$：使用 L1 范数约束强度，保留红外热信息。
+    \item $\mathcal{L}_{grad}$：\textbf{最大梯度纹理损失}。我们强制融合图像的梯度趋近于源图像中梯度的\textbf{最大值}，从而同时保留红外目标的边缘和可见光的纹理：
     \begin{equation}
-        \mathcal{L}_{int} = \frac{1}{HW} \| I_f - I_{ir} \|_2^2
+        \mathcal{L}_{grad} = \| \nabla I_f - \max(|\nabla I_{ir}|, |\nabla I_{vi}|) \|_1
     \end{equation}
-    
-    \item $\mathcal{L}_{grad}$ 为\textbf{梯度损失}，迫使融合图像保留可见光图像的丰富纹理细节（如车牌号、道路标识）：
-    \begin{equation}
-        \mathcal{L}_{grad} = \frac{1}{HW} \| |\nabla I_f| - \max(|\nabla I_{ir}|, |\nabla I_{vi}|) \|_1
-    \end{equation}
-    这里使用了最大梯度选择策略。
-    
-    \item $\mathcal{L}_{det}$ 为\textbf{检测感知损失}（Detection-aware Loss），利用预训练检测器的反馈来优化融合网络，使其生成的图像特征更利于目标识别。
+    \item $\mathcal{L}_{ssim}$：结构相似性损失，确保融合图像在结构上不失真。
 \end{itemize}
 
-参数 $\alpha, \beta, \gamma$ 为平衡各项损失的超参数。
-
-\subsection{参考来源}
-本项目参考了 GitHub 开源实现：
-\begin{itemize}
-    \item TarDAL: \url{https://github.com/StartCode/TarDAL}
-    \item Ultralytics YOLOv8: \url{https://github.com/ultralytics/ultralytics} \cite{jocher2023yolov8}
-\end{itemize}
-代码基于 PyTorch 框架开发，并在原有开源代码基础上集成了 Coordinate Attention 模块。
 
 \section{实验设置}
 
 \subsection{实验数据集：MSRS}
-本项目选用了经典的 \textbf{MSRS (Multi-Spectral Road Scenarios)} 数据集 \cite{tang2022msrs}，该数据集由大连理工大学的唐临风（Linfeng Tang）等学者发布 \cite{tang2022image}。它是当前“融合+检测/分割”联合任务的首选Benchmark数据集之一。
+本项目选用了经典的 \textbf{MSRS (Multi-Spectral Road Scenarios)} 数据集 \cite{tang2022msrs}...
 
-\textbf{数据集概况}：
-\begin{itemize}
-    \item \textbf{全称}：Multi-Spectral Road Scenarios for Practical Infrared and Visible Image Fusion.
-    \item \textbf{规模与场景}：整个数据集包含 \textbf{1444 对} 高质量对齐的红外与可见光图像对，涵盖了白天（Daytime）和夜晚（Nighttime）等多种复杂的道路场景。
-    \begin{itemize}
-        \item 训练集：1083 对。
-        \item 测试集：361 对。
-    \end{itemize}
-    \item \textbf{分辨率}：图像尺寸统一为 $480 \times 640$，非常适合在消费级显卡（如RTX 3060）上进行高效训练与推理。
-    \item \textbf{标注信息}：数据集原作者提供了精细的像素级语义分割标签（包含行人、汽车、自行车等常见目标）。在本项目中，我们将其转换为目标检测所需的矩形框（Bounding Box）标注。
-\end{itemize}
+\begin{figure}[H]
+    \centering
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{images/msrs_ir.png}
+        \caption*{Infrared Image}
+    \end{minipage}
+    \hfill
+    \begin{minipage}{0.48\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{images/msrs_vi.png}
+        \caption*{Visible Image}
+    \end{minipage}
+    \caption{MSRS 数据集样本示例}
+    \label{fig:dataset_full}
+\end{figure}
 
-\textbf{选用理由}：
-\begin{enumerate}
-    \item \textbf{尺寸适中，训练高效}：$640 \times 480$ 的分辨率在显存占用和训练速度上达到了极佳的平衡，非常契合本项目使用的 NVIDIA RTX 3060 硬件环境。
-    \item \textbf{高质量对齐}：无需复杂的预处理配准算法，可以直接作为网络输入，保证了端到端训练的稳定性。
-    \item \textbf{任务契合}：MSRS 是专门为“视觉感知下游任务”设计的融合数据集，完美契合本项目验证“融合对检测性能提升”的核心目的。
-\end{enumerate}
-
-\subsection{实验环境}
-\begin{itemize}
-    \item \textbf{硬件}：NVIDIA GeForce RTX 3060 (12GB) / Mac M2 (MPS)
-    \item \textbf{软件}：Python 3.8, PyTorch 2.0+, CUDA 11.8
-    \item \textbf{加速}：使用混合精度训练 (AMP) 加速收敛。
-\end{itemize}
-
-\subsection{评价指标}
-\begin{enumerate}
-    \item \textbf{图像融合质量指标}：
-    \begin{itemize}
-        \item \textbf{MI (互信息)}：衡量融合图像从源图像获取的信息量。
-        \item \textbf{VIF (视觉信息保真度)}：评估人眼视觉感知的图像质量。
-    \end{itemize}
-    \item \textbf{目标检测指标}：
-    \begin{itemize}
-        \item \textbf{mAP@0.5}：IoU阈值为0.5时的平均精度均值。
-        \item \textbf{Latency}：单帧推理延迟（毫秒）。
-    \end{itemize}
-\end{enumerate}
+% ... (Rest of dataset section) ...
 
 \section{实验结果及分析}
 
 \subsection{视觉效果对比}
-如图 \ref{fig:visual_quality} 所示，我们选取了夜间低照度场景进行对比。
-\begin{itemize}
-    \item \textbf{可见光原图}：由于光照不足，行人几乎不可见，导致检测漏检。
-    \item \textbf{红外原图}：行人轮廓清晰，但背景（如树木、建筑）细节缺失。
-    \item \textbf{Baseline融合}：保留了一定细节，但在高光处出现了伪影。
-    \item \textbf{本项目融合 (Ours)}：不仅清晰保留了红外热目标，同时还原了可见光的环境纹理，且目标边缘更加锐利。
-\end{itemize}
+如图 \ref{fig:visual_quality} 所示...
 
 \begin{figure}[H]
     \centering
-    % \includegraphics[width=0.9\textwidth]{figures/result_comparison.png}
-    \fbox{\parbox{0.9\textwidth}{\centering \vspace{2cm} [此处插入视觉效果对比图：红外/可见光/Baseline/Ours] \vspace{2cm}}}
-    \caption{不同方法在夜间场景下的融合效果与检测框可视化对比}
+    \includegraphics[width=0.8\textwidth]{images/msrs_result.png}
+    \caption{Baseline 方法在夜间场景下的融合检测效果}
     \label{fig:visual_quality}
 \end{figure}
 

@@ -196,7 +196,13 @@ class Fuse:
         f_loss = self.config.loss.fuse
         src_w, adv_w = f_loss.src, f_loss.adv
         adv_w = 0 if d_warming else adv_w
-        src_l = w1 * self.src_loss(fus, ir) + w2 * self.src_loss(fus, vi)
+        
+        src_fn = self.config.loss.fuse.src_fn
+        if src_fn == 'v_hybrid':
+             src_l = self.hybrid_loss(fus, ir, vi)
+        else:
+             src_l = w1 * self.src_loss(fus, ir) + w2 * self.src_loss(fus, vi)
+             
         adv_l, tar_l, det_l = self.adv_loss(fus, mk)
         loss = src_w * src_l.mean() + adv_w * adv_l.mean()
 
@@ -209,6 +215,35 @@ class Fuse:
         dx, dy = s[:, :, 0, :, :], s[:, :, 1, :, :]
         u = torch.sqrt(torch.pow(dx, 2) + torch.pow(dy, 2) + eps)  # sqrt backwork x range: (0, n]
         return u
+    
+    def hybrid_loss(self, fus: Tensor, ir: Tensor, vi: Tensor) -> Tensor:
+        # 1. Pixel Intensity Loss (L1) - maintain IR intensity
+        l_int = l1_loss(fus, ir)
+        
+        # 2. Gradient Loss - max gradient texture from IR and VI
+        grad_fus = self.gradient(fus)
+        grad_ir = self.gradient(ir)
+        grad_vi = self.gradient(vi)
+        target_grad = torch.max(grad_ir, grad_vi)
+        l_grad = l1_loss(grad_fus, target_grad)
+        
+        # 3. SSIM Loss - structural similarity to VI (mainly) or weighted
+        # For simplicity and effectiveness, we calculate SSIM with both and average, or just VI
+        # User request implies "structure", usually from VI. Let's use max SSIM or average.
+        # Standard hybrid often uses SSIM(fus, vi) because VI has structure.
+        l_ssim_vi = ssim_loss(fus, vi, window_size=11)
+        l_ssim_ir = ssim_loss(fus, ir, window_size=11)
+        l_ssim = 0.5 * l_ssim_vi + 0.5 * l_ssim_ir
+        
+        # Weights (Hyperparameters)
+        # alpha * int + beta * grad + gamma * ssim
+        # These need to be tuned. 
+        # L1 is usually small (~0.1 range). SSIM is ~0.5. Grad is ~0.05.
+        w_int = 1.0
+        w_grad = 10.0
+        w_ssim = 5.0
+        
+        return w_int * l_int + w_grad * l_grad + w_ssim * l_ssim
 
     def src_loss(self, x: Tensor, y: Tensor) -> Tensor:
         src_fn = self.config.loss.fuse.src_fn

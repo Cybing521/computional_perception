@@ -3,6 +3,8 @@ import torch.nn as nn
 from torch import Tensor
 
 
+from module.fuse.coord_att import CoordAtt
+
 class Generator(nn.Module):
     r"""
     Use to generate fused images.
@@ -26,6 +28,10 @@ class Generator(nn.Module):
                 nn.ReLU()
             ) for i in range(depth)
         ])
+
+        # Coordinate Attention Module
+        # Input channels: encoder (dim) + dense layers (dim * depth)
+        self.att = CoordAtt(dim * (depth + 1), dim * (depth + 1))
 
         self.fuse = nn.Sequential(
             nn.Sequential(
@@ -54,5 +60,9 @@ class Generator(nn.Module):
         for i in range(self.depth):
             t = self.dense[i](x)
             x = torch.cat([x, t], dim=1)
+        
+        # Apply Coordinate Attention
+        x = self.att(x)
+        
         fus = self.fuse(x)
         return fus

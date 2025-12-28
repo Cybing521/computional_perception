@@ -6,7 +6,7 @@ save_dir : 'cache' # folder used for saving the model, logs results
 debug    :
   log       : INFO # log level
   wandb_mode: 'disabled' # wandb connection mode (disabled for local dev)
-  fast_run  : false # use a small subset of the dataset for debugging code
+  fast_run  : true # use a small subset of the dataset for debugging code
 
 # framework training strategy:
 #   backward method: fuse (direct training DT)
@@ -71,7 +71,7 @@ inference:
 loss     :
   # fuse loss: src(l1+ssim/ms-ssim) + adv(target+detail) + det
   fuse  :
-    src_fn: v0 # v0: 0.01*ssim + 0.99*l1 | v1: ms-ssim
+    src_fn: v_hybrid # v0: 0.01*ssim + 0.99*l1 | v1: ms-ssim
     src   : 1  # src loss gain (v0: 0.8)
     adv   : 0 # adv loss gain (v0: 0.2)
     t_adv : 1 # target loss gain (v0: 1)

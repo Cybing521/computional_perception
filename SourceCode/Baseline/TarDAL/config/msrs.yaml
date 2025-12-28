@@ -1,5 +1,5 @@
 # base settings
-device   : cuda # device used for training and evaluation (cpu, cuda, cuda0, cuda1, ...)
+device   : cuda # device used for training and evaluation (cpu, cuda, mps, ...)
 save_dir : 'cache' # folder used for saving the model, logs results
 
 # debug mode settings

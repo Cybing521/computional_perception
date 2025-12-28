@@ -1,0 +1,10 @@
+torch>=1.10.0
+torchvision
+kornia>=0.6.0
+pyyaml
+tqdm
+wandb
+numpy
+opencv-python
+scipy
+matplotlib

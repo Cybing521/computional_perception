@@ -49,7 +49,7 @@
 conda create -n fusion_perception python=3.9
 conda activate fusion_perception
 pip install torch torchvision torchaudio  # 根据硬件安装 GPU/MPS 版本
-pip install -r requirements.txt
+pip install -r SourceCode/Baseline/TarDAL/requirements.txt
 ```
 
 ### 2. 数据集准备

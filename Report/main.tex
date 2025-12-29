@@ -23,29 +23,26 @@
 \maketitle
 
 \begin{abstract}
-本报告主要解决复杂光照下的目标检测问题。因为单一传感器在黑夜或强光下容易失效，所以我们设计了一个结合红外和可见光图像的新框架。我们没有简单叠加图像，而是利用红外图像发现目标，并用可见光图像确认细节。我们在特征融合层引入了坐标注意力机制（Coordinate Attention），并采用端到端的训练策略。结果表明，这种方法不仅效果好，而且显著提高了检测精度。
+本报告致力于解决复杂光照条件下的全天候目标检测难题。单一模态传感器在极端环境下（如夜间无光、强光眩晕）存在感知盲区，导致检测失效。为此针对上述问题，我们提出了一种基于\textbf{检测驱动（Detection-Driven）}的红外与可见光图像融合新框架。该框架并非简单的像素叠加，而是通过\textbf{空间-语义协同（Spatial-Semantic Synergy）}机制，利用红外热辐射作为目标提示，并结合可见光纹理确认细节。我们在特征融合层创新性地引入了\textbf{S-CAFM (Spatial-Coordinate Attention Fusion Module)}，并采用了端到端的联合优化策略。实验结果表明，该方法在 mAP@75 高精度定位指标上提升了 4.4\%，实现了检测精度与融合质量的\textbf{帕累托最优（Pareto Optimality）}，并达到了 28.5ms 的实时推理延迟。
 \end{abstract}
 
 \section{项目背景}
 
-\subsection{任务概述}
-在计算感知领域，单一传感器有很大局限。可见光相机在暗光下看不清，红外相机没有纹理。所以，我们需要将两者结合，这正是本项目——**可见光与红外（VI-IR）图像融合**要做的事。我们通过处理这两种信息，来获得更准确的场景描述。
+\subsection{任务概述与核心挑战}
+在计算感知领域，全天候环境下的精确感知是自动驾驶等应用落地的关键。传统的单一传感器受物理特性限制：可见光相机在夜间面临“盲视”，而红外相机缺乏纹理细节，导致目标边缘模糊。这种\textbf{“定位模糊（Localization Blur）”}现象是制约检测器在高精度（如 IOU=0.75）下性能的瓶颈。本项目旨在通过\textbf{可见光与红外（VI-IR）图像融合}技术，重构出既包含丰富语义又具备精确几何边缘的高质量场景描述，从根本上突破单一模态的感知极限。
 
 \subsection{现有挑战}
-虽然有很多算法，但是在实际应用中面临挑战：
+尽管现有算法层出不穷，但在实际落地中仍面临严峻挑战：
 \begin{enumerate}
-    \item \textbf{位置与含义不匹配}：现有方法虽然通过生成让图像变好看，但是丢失了小目标的空间信息。所以检测器很难画出精准的框。
-    \item \textbf{策略缺陷}：大多数算法只追求好看，而不考虑机器能不能检测到。如果丢失了边缘信息，那么融合就是无效的。
+    \item \textbf{位置语义失配}：现有生成式方法（如 GAN）虽然提升了图像的视觉观感，但往往引入了伪影或导致边缘弥散，不仅未能辅助定位，反而增加了检测器的\textbf{坐标回归不确定性（Regression Uncertainty）}。
+    \item \textbf{优化目标割裂}：大多数算法将“能够看清”作为终极目标，忽略了机器视觉对“能够检测”的特殊需求。若融合层无法感知下游任务的梯度反馈，其生成的特征分布与检测器的判别边界将难以对齐。
 \end{enumerate}
 
 \subsection{本文贡献}
-针对这些问题，我们提出了一种检测驱动的框架。主要贡献包括：
+针对上述问题，我们提出了一种检测驱动的特征协同重构框架。主要贡献包括：
 \begin{enumerate}
-    \item \textbf{引入简单的形状规则}：我们针对道路场景，首次在融合层引入了 **Spatial-Coordinate Attention Fusion Module (S-CAFM)**。车道线是水平的，行人是垂直的。S-CAFM 机制利用这一规则，分别在水平和垂直方向上处理特征，这一机制充当了回归任务的“空间标尺”，解决了卷积网络下采样导致的位置信息丢失问题。
-    \item \textbf{端到端的联合训练策略}：传统的融合与检测往往是分阶段进行的，通过“接力”的方式传递信息。而我们采用了**端到端联合训练**，通过链式法则，检测网络（YOLOv8 Head）的边界框回归损失（Bounding Box Regression Loss）被转化为对前段融合生成器 $G$ 的梯度更新。这种机制迫使融合层不再关注那些无关紧要的背景纹理，而是全力保留对检测任务至关重要的边缘和轮廓信息：
-    \begin{equation}
-        \nabla_{\Theta_{Fusion}} = \frac{\partial \mathcal{L}_{Det}}{\partial \mathbf{I}_{Fused}} \cdot \frac{\partial \mathbf{I}_{Fused}}{\partial \Theta_{Fusion}}
-    \end{equation}
+    \item \textbf{显式几何建模：S-CAFM 模块}。针对道路场景中普遍存在的正交几何特征（如水平车道线、垂直行人），我们首次在融合层引入了 \textbf{Spatial-Coordinate Attention Fusion Module (S-CAFM)}。S-CAFM 利用轴向一维编码机制，分别在 X 轴和 Y 轴上聚合特征，充当了回归任务的“空间标尺”。该机制有效对抗了卷积下采样带来的空间信息弥散，显著降低了检测框位置预测的随机扰动。
+    \item \textbf{闭环语义对齐（Closed-loop Semantic Alignment）}。我们摒弃了传统的分阶段“接力”式训练，构建了\textbf{端到端联合训练闭环}。通过链式法则，检测网络（$\Theta_{D}$）的语义反馈（分类与回归损失）直接转化为对融合网络（$\Theta_{G}$）的梯度更新。这种机制迫使融合生成器不再关注无关紧要的背景纹理，而是主动保留那些对检测任务至关重要的语义边缘，实现了特征生成与目标识别的高度一致性。
 \end{enumerate}
 
 \textbf{预期结果}：在MSRS数据集上验证所提方法的有效性，实现比单一模态更高的平均精度（mAP），并保持较低的推理延迟。
@@ -61,7 +58,7 @@
 \end{enumerate}
 
 \subsection{检测驱动的图像融合}
-传统的融合算法仅追求视觉效果（Visual Quality），而忽略了融合图像对下游任务（如目标检测）的友好性。因此，近年来涌现了一批**任务驱动**的融合算法：
+传统的融合算法仅追求视觉效果（Visual Quality），而忽略了融合图像对下游任务（如目标检测）的友好性。因此，近年来涌现了一批\textbf{任务驱动}的融合算法：
 \begin{itemize}
     \item \textbf{SeAFusion} \cite{tang2022seafusion} 提出了一种语义感知的实时融合架构，通过引入高层语义损失（Semantic Loss）来引导融合网络保留关键目标特征。
     \item \textbf{PIAFusion} \cite{tang2022piafusion} 进一步考虑了光照变化，设计了基于光照感知的渐进式融合策略，在不同光照条件下均表现出色。
@@ -78,12 +75,12 @@
     \label{fig:tardal_perf}
 \end{figure}
 
-尽管上述方法在检测任务上取得了突破，但在处理**道路场景特有的几何结构**（如车道线、直立行人）时，仍缺乏针对性的空间位置建模能力，这正是本文引入 Coordinate Attention 的动机所在。
+尽管上述方法在检测任务上取得了突破，但在处理\textbf{道路场景特有的几何结构}（如车道线、直立行人）时，仍缺乏针对性的空间位置建模能力，这正是本文引入 Coordinate Attention 的动机所在。
 
 \section{方法描述}
 
 \subsection{问题定义}
-我们将红外与可见光图像融合任务定义为一个**检测驱动的特征协同重构问题 (Detection-driven Feature Synergistic Reconstruction)**。
+我们将红外与可见光图像融合任务定义为一个\textbf{检测驱动的特征协同重构问题 (Detection-driven Feature Synergistic Reconstruction)}。
 
 形式化地，给定融合网络 $G$ 和检测网络 $D_{det}$，我们的联合优化目标是：
 \begin{equation}
@@ -92,81 +89,73 @@
 其中 $\Theta_G$ 为融合网络的参数，$\Theta_D$ 为检测网络的参数。此公式体现了一个多目标联合优化算子：$\mathcal{L}_{detect}$ 保证语义正确性，而 $\mathcal{L}_{fusion}$ 保证视觉分布的真实性。
 
 \subsection{系统架构概览}
-本项目提出的级联式融合检测系统构建在 **TarDAL** \cite{liu2022target} 的基础之上。如图 \ref{fig:arch_detail} 所示，我们在特征提取与重构之间嵌入了核心的**坐标注意力（S-CAFM）模块**。
+本项目提出的级联式融合检测系统构建在 \textbf{TarDAL} \cite{liu2022target} 的基础之上。如图 \ref{fig:arch_detail} 所示，我们在特征提取与重构之间嵌入了核心的\textbf{坐标注意力（S-CAFM）模块}。
 
-图 \ref{fig:arch_detail} 展示了**具体的网络架构**。特征提取部分采用类似 DenseNet 的密集连接块，核心的融合层嵌入了我们设计的坐标注意力（S-CAFM）模块。检测部分采用了 **YOLOv8 Head** 来从融合特征中提取语义信息。
+图 \ref{fig:arch_detail} 展示了\textbf{具体的网络架构}。特征提取部分采用类似 DenseNet 的密集连接块，核心的融合层嵌入了我们设计的坐标注意力（S-CAFM）模块。检测部分采用了 \textbf{YOLOv8 Head} 来从融合特征中提取语义信息。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1.0\textwidth]{images/network_architecture_diagram.jpg}
+    \caption{网络整体架构图。系统采用双流架构提取红外与可见光特征，通过 S-CAFM 模块进行坐标感知的特征融合，最终输入 YOLOv8 检测头。训练过程中，检测损失直接通过反向传播更新融合网络参数，实现端到端的闭环优化。}
+    \label{fig:arch_detail}
+\end{figure}
 
 \textbf{训练策略：端到端检测驱动 (End-to-End Detection-Driven)}。
 尽管系统在推理时是级联结构，但在训练阶段，我们构建了一个完整的闭环。如图 \ref{fig:arch_detail} 所示，检测网络 $D_{det}$ 的预测误差（包含 Bounding Box 回归损失和类别损失）通过反向传播算法直接作用于融合网络 $G$ 的参数更新。
 \begin{itemize}
     \item \textbf{前向传播}：融合图像 $I_f$ 输入 YOLOv8 产生检测结果。
-    \item \textbf{反向传播}：$\nabla_{\Theta_G} \mathcal{L}_{detect}$ 携带了“哪些特征利于检测”的梯度信息，强迫融合网络关注目标的边缘和关键部位，而非背景噪声。这种**梯度引导 (Gradient Guidance)** 实现了从“视觉一致性”到“语义可区分性”的跨越。
+    \item \textbf{反向传播}：$\nabla_{\Theta_G} \mathcal{L}_{detect}$ 携带了“哪些特征利于检测”的梯度信息，强迫融合网络关注目标的边缘和关键部位，而非背景噪声。这种\textbf{梯度引导 (Gradient Guidance)} 实现了从“视觉一致性”到“语义可区分性”的跨越。
 \end{itemize}
 
 \subsection{坐标注意力融合模块 (Coordinate Attention Fusion)}
-如图 \ref{fig:arch_detail} 所示，我们的改进主要集中在融合层的特征交互方式上。
+如图 \ref{fig:arch_detail} 所示，我们的改进主要集中在融合层的特征交互方式上。传统的通道注意力机制（如 SE Block）通过全局平均池化（Global Average Pooling）将空间信息压缩为一个标量，虽然能捕捉通道间的依赖关系，但严重丢失了位置信息（Positional Information）。这种降维操作会导致空间结构的模糊，从而增加检测器回归边界框时的\textbf{空间不确定性（Spatial Uncertainty）。}
 
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.95\textwidth]{images/network_architecture_diagram.jpg}
-    \caption{本文提出的网络架构示意图 (Proposed)。我们在编码器与解码器之间嵌入了 S-CAFM 模块。}
-    \label{fig:arch_detail}
-\end{figure}
+为了解决这一问题，我们引入了 \textbf{Spatial-Coordinate Attention Fusion Module (S-CAFM)} \cite{hou2021coordinate}。与传统方法不同，S-CAFM 利用两个并行的一维特征编码过程，分别沿着水平坐标（X-axis）和垂直坐标（Y-axis）建立\textbf{空间索引（Spatial Indexing）}。
 
-例如，行人、路灯通常呈现垂直分布，而车道线、护栏则呈现水平分布。传统的通道注意力机制（如SE Block）通过全局平均池化（Global Average Pooling）将空间信息压缩为一个标量，虽然能捕捉通道间的依赖关系，但严重丢失了位置信息（Positional Information）。
+具体而言，针对特征张量 $X$，我们使用尺寸为 $(H, 1)$ 和 $(1, W)$ 的池化核分别对每个通道进行编码：
+\begin{equation}
+    z_c^h(h) = \frac{1}{W} \sum_{0 \le i < W} x_c(h, i), \quad z_c^w(w) = \frac{1}{H} \sum_{0 \le j < H} x_c(j, w)
+\end{equation}
+这就生成了一对方向感知的特征映射。该机制的物理意义在于：它允许网络在捕获长距离依赖的同时，保留精确的位置信息。对于道路场景，这种\textbf{正交几何先验（Orthogonal Geometric Prior）}极为有效——垂直池化能够精确定位行人躯干，而水平池化则能锁定车辆与路沿。最终，生成的特征图充当了回归任务的“空间标尺”，有效抑制了卷积下采样带来的边缘弥散效应。
 
-为了解决这一根本性矛盾，我们并没有沿用传统的通道注意力机制（如 SE Block），因为实验表明：虽然通道注意力能强化特征，但它通过全局平均池化将空间信息压缩为一个标量，往往导致位置信息（Positional Information）的不可逆丢失。
-
-为了解决这个问题，我们引入了 \textbf{Spatial-Coordinate Attention Fusion Module (S-CAFM)} \cite{hou2021coordinate}。
-
-\textbf{简单的形状规则}：道路场景很有规律。车道线和护栏通常是水平的，而行人、路灯则是垂直的。传统的注意力机制（如 SE 或 CBAM）会把这些形状信息压缩成一个点，丢失了位置信息。相反，S-CAFM 机制保留了这些信息。它通过在水平和垂直两个方向上分别处理特征，建立了**空间索引**。S-CAFM 的核心思想是：**分别沿着 X 轴和 Y 轴处理特征**。
-
-具体来说，我们分别建立水平和垂直方向的索引：
+\subsection{联合优化目标与损失函数}
+本文提出的框架是一个典型的多任务学习系统，其核心在于\textbf{语义反馈的闭环流动}。形式化地，给定融合网络 $G(\cdot; \Theta_{G})$ 和检测网络 $D(\cdot; \Theta_{D})$，我们的联合损失函数 $\mathcal{L}_{total}$ 定义如下：
 
 \begin{equation}
-    z_c^h(h) = \frac{1}{W} \sum_{0 \le i < W} x_c(h, i)
+    \min_{\Theta_G, \Theta_D} \mathcal{L}_{total} = \mathcal{L}_{detect}(D(I_{fused}; \Theta_{D}), Y_{gt}) + \lambda \mathcal{L}_{fusion}(I_{fused}, I_{ir}, I_{vi})
 \end{equation}
 
+其中，$I_{fused} = G(I_{ir}, I_{vi}; \Theta_{G})$。这一公式不仅定义了优化的目标，更隐含了参数更新的机制。依据链式法则，检测损失 $\mathcal{L}_{detect}$ 通过反向传播直接更新融合网络的参数 $\Theta_{G}$：
 \begin{equation}
-    z_c^w(w) = \frac{1}{H} \sum_{0 \le j < H} x_c(j, w)
+    \nabla_{\Theta_{G}} = \frac{\partial \mathcal{L}_{detect}}{\partial I_{fused}} \cdot \frac{\partial I_{fused}}{\partial \Theta_{G}}
 \end{equation}
-
-通过这两个方向的池化操作，我们得到了两个方向的特征描述符 $z^h$ 和 $z^w$。然后，我们将这两个描述符拼接起来，并通过一个 $1 \times 1$ 卷积 $F_1$ 和激活函数 $\delta$ 进行变换，得到一个中间特征 $f$：
-
+这意味着 $\Theta_{G}$ 的更新不再仅仅由像素级的重建误差（$\mathcal{L}_{fusion}$）主导，而是同时受到下游检测精度的约束。$\mathcal{L}_{fusion}$ 的具体构成采用混合感知策略，包含强度损失 $\mathcal{L}_{int}$、结构相似性损失 $\mathcal{L}_{ssim}$ 以及\textbf{最大梯度引导损失} $\mathcal{L}_{grad}$：
 \begin{equation}
-    f = \delta(F_1([z^h, z^w]))
+    \mathcal{L}_{grad} = \| \nabla I_{fused} - \max(|\nabla I_{ir}|, |\nabla I_{vi}|) \|_1
 \end{equation}
+这种梯度约束与检测网络的边缘敏感特性形成了\textbf{高度一致性}，共同促成了模型的高性能。
 
-最后，这些权重乘回原始特征。所以这能锁定红外目标，也能勾勒出车道线。这有助于后续的检测。
-
-\subsection{混合感知损失函数}
-为了提升融合质量，我们设计了**混合感知损失**。总损失 $\mathcal{L}_{total}$ 定义为：
-
-\begin{equation}
-    \mathcal{L}_{total} = \lambda_1 \mathcal{L}_{int} + \lambda_2 \mathcal{L}_{grad} + \lambda_3 \mathcal{L}_{ssim} + \mathcal{L}_{adv}
-\end{equation}
-
-其中：
+此外，为了保证视觉分布的真实性，我们还引入了对抗损失 $\mathcal{L}_{adv}$。采用双判别器机制：
 \begin{itemize}
-    \item $\mathcal{L}_{int}$：强度损失。保留红外热信息。
-    \item $\mathcal{L}_{grad}$：\textbf{最大梯度纹理损失}。我们强制融合图像的梯度接近源图像中的\textbf{最大值}。这样能同时保留红外边缘和可见光纹理：
-    \begin{equation}
-        \mathcal{L}_{grad} = \| \nabla I_f - \max(|\nabla I_{ir}|, |\nabla I_{vi}|) \|_1
-    \end{equation}
-    \item $\mathcal{L}_{ssim}$：结构损失。确保图像结构不失真。
-    \item $\mathcal{L}_{adv}$：\textbf{对抗损失}。我们使用双判别器机制：
-    \begin{itemize}
-        \item \textbf{目标判别器}：保留热辐射特征。
-        \item \textbf{细节判别器}：保留背景纹理。
-    \end{itemize}
-    这就像是一个平衡游戏。检测损失通过增强目标特征来减少分类错误，但也可能产生伪影。判别器则像一个裁判，强制图像看起来自然。两者相互制约，保证了图像既好用又真实。
+    \item \textbf{目标判别器}：保留热辐射特征。
+    \item \textbf{细节判别器}：保留背景纹理。
 \end{itemize}
+这就像是一个博弈过程：检测损失通过增强目标特征来减少分类错误，而判别器则强制图像看起来自然。两者相互制约，保证了图像实现了语义性与可视性的平衡。
 
 
 \section{实验设置}
 
 \subsection{实验数据集：MSRS}
-本项目选用了经典的 \textbf{MSRS (Multi-Spectral Road Scenarios)} 数据集 \cite{tang2022msrs}...
+为了全面验证所提算法在复杂道路环境下的感知能力，本项目选用了业界权威的 \textbf{MSRS (Multi-Spectral Road Scenarios)} 数据集 \cite{tang2022msrs} 作为实验基准。
+
+\textbf{数据集选用依据}：
+\begin{enumerate}
+    \item \textbf{全天候场景覆盖}：MSRS 数据集包含 1444 对经过严格配准的红外与可见光图像对，其中白天场景 715 对，夜间场景 729 对。这种均衡的“昼夜分布”对于评估融合算法在极端光照变化（如强光干扰、夜间微光）下的鲁棒性至关重要，能够有效检验本文模型在不同信噪比条件下的特征提取能力。
+    \item \textbf{任务驱动的标注支持}：不同于 TNO、RoadScene 等仅用于视觉评估的传统数据集，MSRS 提供了精确的语义标注信息。在本实验中，我们将这些标注转化为针对行人 (Person)、车辆 (Car) 和自行车 (Bike) 的目标检测标签。这一特性是实现本文“检测驱动（Detection-Driven）”联合训练策略的前提，使得检测损失（$\mathcal{L}_{detect}$）能够通过反向传播直接优化融合网络参数。
+    \item \textbf{几何结构适配性}：该数据集专注于城市道路场景，其中的关键目标（如直立的行人、水平行驶的车辆）具有显著的正交几何特征。这与本文提出的 \textbf{S-CAFM (Spatial-Coordinate Attention Fusion Module)} 高度契合——S-CAFM 通过水平（X-axis）和垂直（Y-axis）方向的注意力编码，能够精准捕获这些空间先验，从而显著提升小目标的定位精度。
+\end{enumerate}
+
+数据集的具体划分如下：训练集包含 1083 对图像，测试集包含 361 对图像，分辨率统一为 $640 \times 480$。图 \ref{fig:dataset_full} 展示了该数据集在典型场景下的红外与可见光图像样本。
 
 \begin{figure}[H]
     \centering
@@ -185,7 +174,6 @@
     \label{fig:dataset_full}
 \end{figure}
 
-% ... (Rest of dataset section) ...
 
 \section{实验结果及分析}
 
@@ -212,6 +200,7 @@
     \centering
     \includegraphics[width=0.98\textwidth]{images/multi_scenario_fusion_comparison.jpg}
     \caption{多场景融合质量对比。展示了 6 个典型挑战场景（3 个夜间场景 + 3 个白天场景），列从左到右依次为：红外输入、可见光输入、简单加权融合及本文方法 (Ours)。每个场景包含局部放大框，清晰展示了本文方法在保留红外热辐射目标的同时，有效融合可见光纹理细节的优势。}
+    \vspace{2mm}
     \label{fig:visual_quality}
 \end{figure}
 
@@ -230,17 +219,17 @@
         DenseFuse & 0.52 & 0.45 & 0.72 & 1.85 & 4.21 \\
         FusionGAN & 0.48 & 0.32 & 0.65 & 1.62 & 3.85 \\
         SeAFusion & 0.61 & 0.55 & 0.76 & 2.10 & 6.42 \\
-        SwinFusion & 0.65 & 0.58 & 0.79 & 2.15 & 7.15 \\
+        SwinFusion & 0.65 & 0.58 & \textbf{0.79} & 2.15 & 7.15 \\
         TarDAL (Baseline) & 0.58 & 0.51 & 0.74 & 2.05 & 4.12 \\
-        \textbf{Ours} & \textbf{0.78} & \textbf{0.96} & \textbf{0.71} & \textbf{2.35} & \textbf{32.76} \\
+        \textbf{Ours} & \textbf{0.78} & \textbf{0.96} & 0.71 & \textbf{2.35} & \textbf{32.76} \\
         \bottomrule
     \end{tabular}
 \end{table}
 
 \textbf{结果解读}：表 \ref{tab:fusion_metrics} 显示：
 \begin{enumerate}
-    \item \textbf{清晰度高}：Ours 方法的 AG 很高，达到了 **32.76**。这是因为我们使用了梯度损失。所以模型生成的边缘很锐利。虽然高梯度权重导致 AG 指标显著高于传统方法，但结合图 \ref{fig:visual_quality} 的局部放大图可见，这种增强主要集中在目标边缘和纹理细节上。由于 YOLOv8 的主干网络（Backbone）对边缘特征极其敏感，这种‘针对检测优化’的梯度分布正是模型取得高检测精度的关键。
-    \item \textbf{边缘保留好}：Qabf 达到了 **0.96**。这说明 S-CAFM 保留了边缘信息。
+    \item \textbf{清晰度高}：Ours 方法的 AG 很高，达到了 \textbf{32.76}。这是因为我们使用了梯度损失。所以模型生成的边缘很锐利。虽然高梯度权重导致 AG 指标显著高于传统方法，但结合图 \ref{fig:visual_quality} 的局部放大图可见，这种增强主要集中在目标边缘和纹理细节上。AG 指标的大幅提升反映了模型对边缘纹理的极度敏感，这正是目标检测任务中边界定位所必需的特征。由于 YOLOv8 的主干网络（Backbone）对边缘特征极其敏感，这种‘针对检测优化’的梯度分布正是模型取得高检测精度的关键。
+    \item \textbf{边缘保留好}：Qabf 达到了 \textbf{0.96}。这说明 S-CAFM 保留了边缘信息。
     \item \textbf{取舍}：SSIM 稍微下降了。但是为了让机器看得清，这是可以接受的。
 \end{enumerate}
 
@@ -309,8 +298,8 @@
 
 \textbf{分析}：
 \begin{itemize}
-    \item \textbf{行人}：AP 提升了 **2.8\%**。这是因为 S-CAFM 的 Y 轴注意力捕捉到了行人的垂直特征。
-    \item \textbf{车辆}：AP 提升了 **3.3\%**。这是因为 S-CAFM 的 X 轴注意力捕捉到了车辆的水平特征。
+    \item \textbf{行人}：AP 提升了 \textbf{2.8\%}。这是因为 S-CAFM 的 Y 轴注意力捕捉到了行人的垂直特征。
+    \item \textbf{车辆}：AP 提升了 \textbf{3.3\%}。这是因为 S-CAFM 的 X 轴注意力捕捉到了车辆的水平特征。
 \end{itemize}
 
 图 \ref{fig:pr_curves} 进一步展示了 Person 和 Car 类别的 Precision-Recall 曲线。可以看出，Our 方法（绿色实线）在各个 Recall 水平下都包围了 Baseline，尤其是在高 Recall 区域保持了更高的 Precision，证明了模型有效减少了漏检。
@@ -364,7 +353,7 @@
     \small \\ \textit{* 注：FLOPs 是基于输入分辨率 $640 \times 480$ 计算的。}
 \end{table}
 
-\textbf{结果分析}：虽然引入了 CA 模块，Ours 的参数量仅比 Baseline 增加 0.04M，FLOPs 增加 0.4G，但推理延迟反而降低了 1.6ms（得益于更高效的 TorchScript 优化），处于效率-精度的帕累托最优前沿。
+\textbf{结果分析}：虽然引入了 S-CAFM 模块，Ours 的参数量仅比 Baseline 增加 0.04M，FLOPs 增加 0.4G，但推理延迟反而降低了 1.6ms。这主要得益于更高效的 TorchScript 优化。由于采用了高效的维度缩减策略，S-CAFM 的计算开销极低，结合部署层面的优化，实现了更高的运行效率，处于效率-精度的帕累托最优前沿。
 
 
 
@@ -405,9 +394,9 @@
 \end{figure}
 
 \subsection{特征图可视化}
-为了直观展示 CA 的作用，我们可视化了融合网络中间层的特征热力图。如图 \ref{fig:heatmap} 所示，CA 模块显着抑制了背景中的过曝噪声（如路灯光晕），并将有限的注意力资源**精准聚焦**于具有典型几何先验的目标区域。具体而言，行人区域呈现出明显的**垂直条状响应**，而路沿和车道线则表现为**水平带状响应**。
+为了直观展示 CA 的作用，我们可视化了融合网络中间层的特征热力图。如图 \ref{fig:heatmap} 所示，CA 模块显着抑制了背景中的过曝噪声（如路灯光晕），并将有限的注意力资源\textbf{精准聚焦}于具有典型几何先验的目标区域。具体而言，行人区域呈现出明显的\textbf{垂直条状响应}，而路沿和车道线则表现为\textbf{水平带状响应}。
 
-这种“正交位置感知”特性直接对应于 YOLOv8 回归分支中的 **IoU 损失收敛**。通过 CA 增强了目标边界的特征激活，减小了检测框在坐标回归时的不确定度（Uncertainty），使得模型在高 IoU 阈值下的表现（mAP@75）得到大幅提升。这种**空间位置的显式建模**有效弥补了深层网络中下采样导致的位置模糊，是本项目取得性能突破的关键机理。
+这种“正交位置感知”特性直接对应于 YOLOv8 回归分支中的 \textbf{IoU 损失收敛}。通过 CA 增强了目标边界的特征激活，减小了检测框在坐标回归时的不确定度（Uncertainty），使得模型在高 IoU 阈值下的表现（mAP@75）得到大幅提升。这种\textbf{空间位置的显式建模}有效弥补了深层网络中下采样导致的位置模糊，是本项目取得性能突破的关键机理。这种正交化的特征激活模式，为下游 YOLOv8 检测头的边界框回归分支（BBox Regression Branch）提供了极具区分度的几何特征。相对于 CBAM 的局部离散激活，CA 模块产生的连续轴向分布能有效降低 IoU 损失函数在训练初期的震荡，从而在推理阶段实现更紧凑、更稳健的框选效果。
 
 \begin{figure}[H]
     \centering
@@ -437,11 +426,11 @@
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.95\textwidth]{images/loss_decomposition.png}
-    \caption{损失函数分析。(a) 检测损失与融合总损失的对比，展示了两者在训练中逐渐达到平衡；(b) 融合损失的分项分解，包括强度损失、梯度损失、SSIM损失和对抗损失。这验证了"检测梯度"确实在有效引导"融合过程"。}
+    \caption{损失函数分析。(a) 检测损失 ($\mathcal{L}_{detect}$) 与融合总损失 ($\mathcal{L}_{fusion}$) 的对比，展示了两者在训练中逐渐达到平衡；(b) 融合损失的分项分解，包括强度损失、梯度损失、SSIM损失和对抗损失。这验证了"检测梯度"确实在有效引导"融合过程"。}
     \label{fig:loss}
 \end{figure}
 
-损失分析表明：(1) 检测损失和融合损失在训练初期同步下降，说明两个任务能够协同优化；(2) 在融合损失的各分项中，梯度损失（$\mathcal{L}_{grad}$）占主导地位（见图 \ref{fig:loss}，原误写为 图 9）。这非常关键，因为检测网络对物体“边缘”最为敏感，而 $\mathcal{L}_{grad}$ 恰好约束融合网络生成高梯度特征，两者的优化方向具有**高度一致性 (High Consistency)**，共同促成了模型的高性能。
+损失分析表明：(1) 检测损失和融合损失在训练初期同步下降，说明两个任务能够协同优化；(2) 在融合损失的各分项中，梯度损失（$\mathcal{L}_{grad}$）占主导地位（见图 \ref{fig:loss}）。这非常关键，因为检测网络对物体“边缘”最为敏感，而 $\mathcal{L}_{grad}$ 恰好约束融合网络生成高梯度特征，两者的优化方向具有\textbf{高度一致性 (High Consistency)}，共同促成了模型的高性能。
 
 \subsubsection{超参数敏感性分析}
 为了验证模型对关键超参数的鲁棒性，我们对梯度损失权重 $\lambda_{grad}$ 进行了敏感性实验。
@@ -466,7 +455,7 @@
 \textbf{结果分析}：
 \begin{itemize}
     \item \textbf{鲁棒区间}：$\lambda_{grad}$ 在 5$\sim$50 范围内，mAP 均稳定在 80\% 以上。
-    \item \textbf{非单调性（过拟合风险）}：当 $\lambda_{grad}$ 过大（如 100）时，mAP 反而下降。这是因为模型过度强求梯度的保留，导致对源图像中的高频噪声（如热成像的随机散斑）也进行了锐化，产生了类似“椒盐噪声”的伪影。这些伪影破坏了目标的语义连贯性，误导了检测器。
+    \item \textbf{非单调性（过拟合风险）}：当 $\lambda_{grad}$ 过大（如 100）时，mAP 反而下降。这是因为模型过度强求梯度的保留，导致对源图像中的高频噪声（如热成像的随机散斑）也进行了锐化，产生了类似“椒盐噪声”的伪影。这些伪影破坏了目标的语义连贯性，误导了检测器。这进一步证明了“梯度一致性”的重要性——融合网络生成的梯度不仅仅是视觉上的增强，只有当这些梯度与检测器所需的语义梯度“步调一致”时，性能才会达到 81.3\% 的峰值。
 \end{itemize}
 
 \section{结论与展望}
@@ -475,7 +464,7 @@
 本项目研究了道路场景下的图像融合检测。单纯的图像融合是不够的。所以我们必须结合检测任务来思考融合。我们引入了 Spatial-Coordinate Attention Fusion Module (S-CAFM)。这利用了道路场景的形状规则（水平和垂直）。我们还使用了检测驱动的训练。这让模型学会了关注边缘。我们在 MSRS 数据集上达到了 81.3\% 的 mAP。这证明了我们的方法是有效的。
 
 \subsection{未来工作展望}
-虽然效果很好，但还有改进空间。目前的模型在 PC 上运行。如果要在车上运行，需要进一步优化速度。另外，我们可以引入大语言模型（LLM）。我们可以利用 LLM 的语义理解能力来辅助检测。最后，我们可以尝试纯 Transformer 架构，以解决目前 CNN 结构在处理长距离空间关系（如超长车道线）时的感受野受限问题。这可能会进一步提升性能。
+虽然效果很好，但还有改进空间。目前的模型在 PC 上运行。如果要在车上运行，需要进一步优化速度。我们将进一步探索其在 $M^3FD$ 和 LLVIP 等更具挑战性的多场景数据集上的迁移学习能力。另外，我们可以引入大语言模型（LLM）。利用大语言模型的视觉-语言对齐能力，为融合过程提供更高层的语义约束，以解决极端遮挡下的检测难题。此外，我们将探索基于 TensorRT 的 INT8 量化方案，在保持正交感知特性的同时，进一步压缩推理开销，以适配车载级低功耗芯片。最后，我们可以尝试纯 Transformer 架构，以解决目前 CNN 结构在处理长距离空间关系（如超长车道线）时的感受野受限问题。这可能会进一步提升性能。
 
 \bibliographystyle{plain}
 \bibliography{references}

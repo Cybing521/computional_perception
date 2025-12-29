@@ -52,10 +52,37 @@ pip install torch torchvision torchaudio  # 根据硬件安装 GPU/MPS 版本
 pip install -r SourceCode/Baseline/TarDAL/requirements.txt
 ```
 
-### 2. 数据集准备
-请下载 MSRS 数据集并解压至 `SourceCode/Dataset/MSRS/` 目录。
-- 确保目录结构包含 `Visible`, `Infrared`, `Label` 等子文件夹。
 - 运行转换脚本将分割标签转换为 YOLO 格式。
+
+### 2. 数据集准备 (Data Preparation)
+
+本项目使用 **MSRS (Multi-Spectral Road Scenarios)** 数据集。原始 MSRS 数据集仅提供语义分割标签，为了将其适配于本项目的**目标检测任务**，我们需要进行以下标准化处理（由 `SourceCode/Dataset/convert_yolo.py` 自动完成）：
+
+1.  **标签转换 (Segmentation to BBox)**:
+    *   **输入**: 原始 RGB 掩膜图像 (`Segmentation_labels/`)，像素值对应类别 ID。
+    *   **处理**: 提取每个类别的连通域轮廓，计算其外接矩形 (Bounding Box)，并归一化为 YOLO 格式 (`x_center, y_center, w, h`)。
+    *   **类别映射**:
+        *   MSRS ID `1` (Car) -> YOLO ID `0`
+        *   MSRS ID `2` (Person) -> YOLO ID `1`
+        *   MSRS ID `3` (Bike) -> YOLO ID `2`
+    *   **输出**: 对应每一张图像的 `.txt` 检测标签文件。
+
+2.  **操作步骤**:
+    *   下载 MSRS 数据集并解压至 `SourceCode/Dataset/MSRS/`。
+    *   运行转换脚本：
+        ```bash
+        cd SourceCode/Dataset
+        python convert_yolo.py
+        ```
+    *   脚本将自动生成符合 YOLOv8 训练要求的目录结构及 `msrs_detection.yaml` 配置文件。
+
+> **⚠️ 数据集获取提示**:
+> 为了减小项目体积，当前最新版本的代码库中已移除了原始图像数据。
+> 如果您希望直接从项目历史中获取包含完整数据集的版本，请检出 `main` 分支上提交信息为 **“提交PPT”** 的该次提交。
+> ```bash
+> # 示例命令 (需替换成实际的 commit hash)
+> git checkout <commit-hash-of-提交PPT>
+> ```
 
 ### 3. 运行测试
 使用提供的脚本生成分析图表：

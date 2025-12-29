@@ -1,6 +1,18 @@
-\documentclass[12pt, a4paper]{article}
-\usepackage[utf8]{inputenc}
-\usepackage[fontset=none]{ctex}
+\documentclass[12pt, a4paper]{ctexart}
+\ctexset{
+  section = {
+    format+ = \zihao{4}\heiti\raggedright,
+    number = \arabic{section},
+    name = {,、},
+  },
+  subsection = {
+    format+ = \zihao{-4}\heiti\raggedright,
+    number = \arabic{section}.\arabic{subsection},
+  }
+}
+% \usepackage[utf8]{inputenc} % ctex handles encoding usually, but keeping it doesn't hurt. 
+% Standard ctexart with UTF8 is default.
+\usepackage[fontset=mac]{ctex} % Explicitly set fontset for Mac user since they are on Mac.
 \setCJKmainfont[BoldFont=PingFang SC, ItalicFont=Kaiti SC]{Songti SC}
 \setCJKsansfont{PingFang SC}
 \setCJKmonofont{STSong}
@@ -466,7 +478,59 @@
 \subsection{未来工作展望}
 虽然效果很好，但还有改进空间。目前的模型在 PC 上运行。如果要在车上运行，需要进一步优化速度。我们将进一步探索其在 $M^3FD$ 和 LLVIP 等更具挑战性的多场景数据集上的迁移学习能力。另外，我们可以引入大语言模型（LLM）。利用大语言模型的视觉-语言对齐能力，为融合过程提供更高层的语义约束，以解决极端遮挡下的检测难题。此外，我们将探索基于 TensorRT 的 INT8 量化方案，在保持正交感知特性的同时，进一步压缩推理开销，以适配车载级低功耗芯片。最后，我们可以尝试纯 Transformer 架构，以解决目前 CNN 结构在处理长距离空间关系（如超长车道线）时的感受野受限问题。这可能会进一步提升性能。
 
-\bibliographystyle{plain}
-\bibliography{references}
+\begin{thebibliography}{99}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{#1}
+\expandafter\ifx\csname urlstyle\endcsname\relax\relax\else
+  \urlstyle{same}\fi
+\providecommand{\href}[2]{#2}
+\providecommand{\doi}[1]{\href{https://doi.org/#1}{#1}}
+
+\bibitem[1]{li2018densefuse}
+LI H, WU X J.
+\newblock Densefuse: A fusion approach to infrared and visible images [J].
+\newblock IEEE Transactions on Image Processing, 2018, 28(5): 2614-2623.
+
+\bibitem[2]{ma2019fusiongan}
+MA J Y, YU W, LIANG P W, et al.
+\newblock Fusiongan: A generative adversarial network for infrared and visible image fusion [J].
+\newblock Information Fusion, 2019, 48: 11-26.
+
+\bibitem[3]{ma2022swinfusion}
+MA J Y, TANG L F, FAN F, et al.
+\newblock Swinfusion: Cross-domain long-range learning for general image fusion via swin transformer [J].
+\newblock IEEE/CAA Journal of Automatica Sinica, 2022, 9(7): 1200-1217.
+
+\bibitem[4]{tang2022seafusion}
+TANG L F, YUAN J T, ZHANG H, et al.
+\newblock Image fusion in the loop of high-level vision tasks: A semantic-aware real-time infrared and visible image fusion network [J].
+\newblock Information Fusion, 2022, 82: 28-42.
+
+\bibitem[5]{tang2022piafusion}
+TANG L F, YUAN J T, MA J Y.
+\newblock Piafusion: A progressive infrared and visible image fusion network based on illumination aware [J].
+\newblock Information Fusion, 2022, 83: 79-92.
+
+\bibitem[6]{liu2022target}
+LIU J Y, FAN X, HUANG J J, et al.
+\newblock Target-aware dual adversarial learning and a multi-scenario multi-modality benchmark to fuse infrared and visible for object detection [C]//Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR).
+\newblock 2022: 5802-5811.
+
+\bibitem[7]{tang2022superfusion}
+TANG L F, DENG Y X, MA Y, et al.
+\newblock Superfusion: A versatile image registration and fusion network with semantic awareness [J].
+\newblock IEEE/CAA Journal of Automatica Sinica, 2022, 9(12): 2121-2137.
+
+\bibitem[8]{hou2021coordinate}
+HOU Q B, ZHOU D Q, FENG J S.
+\newblock Coordinate Attention for Efficient Mobile Network Design [C]//Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR).
+\newblock 2021: 13713-13722.
+
+\bibitem[9]{tang2022msrs}
+TANG L F, LI C, MA J Y.
+\newblock MSRS: Multi-spectral road scenarios for practical infrared and visible image fusion [C]//Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR).
+\newblock 2022.
+
+\end{thebibliography}
 
 \end{document}

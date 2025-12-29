@@ -1,15 +1,33 @@
 \begin{thebibliography}{1}
 
-\bibitem{hou2021coordinate}
-Qibin Hou, Daquan Zhou, and Jiashi Feng.
-\newblock Coordinate attention for efficient mobile network design.
-\newblock In {\em Proceedings of the IEEE/CVF Conference on Computer Vision and
-  Pattern Recognition (CVPR)}, pages 13713--13722, 2021.
-
 \bibitem{li2018densefuse}
 Hui Li and Xiao-Jun Wu.
 \newblock Densefuse: A fusion approach to infrared and visible images.
 \newblock {\em IEEE Transactions on Image Processing}, 28(5):2614--2623, 2018.
+
+\bibitem{ma2019fusiongan}
+Jiayi Ma, Wei Yu, Pengwei Liang, Chang Chang, and Jun Luo.
+\newblock Fusiongan: A generative adversarial network for infrared and visible
+  image fusion.
+\newblock In {\em Information Fusion}, volume~48, pages 11--26. Elsevier, 2019.
+
+\bibitem{ma2022swinfusion}
+Jiayi Ma, Linfeng Tang, Fan Fan, Jun Huang, Xiaoguang Mei, and Yong Ma.
+\newblock Swinfusion: Cross-domain long-range learning for general image fusion
+  via swin transformer.
+\newblock {\em IEEE/CAA Journal of Automatica Sinica}, 9(7):1200--1217, 2022.
+
+\bibitem{tang2022seafusion}
+Linfeng Tang, Jiteng Yuan, Hao Zhang, Xingyu Jiang, and Jiayi Ma.
+\newblock Image fusion in the loop of high-level vision tasks: A semantic-aware
+  real-time infrared and visible image fusion network.
+\newblock {\em Information Fusion}, 82:28--42, 2022.
+
+\bibitem{tang2022piafusion}
+Linfeng Tang, Jiteng Yuan, and Jiayi Ma.
+\newblock Piafusion: A progressive infrared and visible image fusion network
+  based on illumination aware.
+\newblock {\em Information Fusion}, 83:79--92, 2022.
 
 \bibitem{liu2022target}
 Jinyuan Liu, Xin Fan, Ji~Jiang Huang, G.~Li, Z.~Chen, and D.~Huang.
@@ -18,23 +36,17 @@ Jinyuan Liu, Xin Fan, Ji~Jiang Huang, G.~Li, Z.~Chen, and D.~Huang.
 \newblock In {\em Proceedings of the IEEE/CVF Conference on Computer Vision and
   Pattern Recognition (CVPR)}, pages 5802--5811, 2022.
 
-\bibitem{ma2022swinfusion}
-Jiayi Ma, Linfeng Tang, Fan Fan, Jun Huang, Xiaoguang Mei, and Yong Ma.
-\newblock Swinfusion: Cross-domain long-range learning for general image fusion
-  via swin transformer.
-\newblock {\em IEEE/CAA Journal of Automatica Sinica}, 9(7):1200--1217, 2022.
-
-\bibitem{ma2019fusiongan}
-Jiayi Ma, Wei Yu, Pengwei Liang, Chang Chang, and Jun Luo.
-\newblock Fusiongan: A generative adversarial network for infrared and visible
-  image fusion.
-\newblock In {\em Information Fusion}, volume~48, pages 11--26. Elsevier, 2019.
-
 \bibitem{tang2022superfusion}
 Linfeng Tang, Yuxin Deng, Yong Ma, Jun Huang, and Jiayi Ma.
 \newblock Superfusion: A versatile image registration and fusion network with
   semantic awareness.
 \newblock {\em IEEE/CAA Journal of Automatica Sinica}, 9(12):2121--2137, 2022.
+
+\bibitem{hou2021coordinate}
+Qibin Hou, Daquan Zhou, and Jiashi Feng.
+\newblock Coordinate attention for efficient mobile network design.
+\newblock In {\em Proceedings of the IEEE/CVF Conference on Computer Vision and
+  Pattern Recognition (CVPR)}, pages 13713--13722, 2021.
 
 \bibitem{tang2022msrs}
 Linfeng Tang, C.~Li, and Jiayi Ma.
@@ -42,17 +54,5 @@ Linfeng Tang, C.~Li, and Jiayi Ma.
   visible image fusion.
 \newblock {\em Proceedings of the IEEE/CVF Conference on Computer Vision and
   Pattern Recognition (CVPR)}, 2022.
-
-\bibitem{tang2022piafusion}
-Linfeng Tang, Jiteng Yuan, and Jiayi Ma.
-\newblock Piafusion: A progressive infrared and visible image fusion network
-  based on illumination aware.
-\newblock {\em Information Fusion}, 83:79--92, 2022.
-
-\bibitem{tang2022seafusion}
-Linfeng Tang, Jiteng Yuan, Hao Zhang, Xingyu Jiang, and Jiayi Ma.
-\newblock Image fusion in the loop of high-level vision tasks: A semantic-aware
-  real-time infrared and visible image fusion network.
-\newblock {\em Information Fusion}, 82:28--42, 2022.
 
 \end{thebibliography}

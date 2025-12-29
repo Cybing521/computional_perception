@@ -108,8 +108,8 @@
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.95\textwidth]{images/network_architecture_digram.png}
-    \caption{本文提出的网络架构示意图 (Proposed)。我们在编码器与解码器之间嵌入了坐标注意力 (Coordinate Attention) 模块。}
+    \includegraphics[width=0.95\textwidth]{images/network_architecture_diagram.jpg}
+    \caption{本文提出的网络架构示意图 (Proposed)。我们在编码器与解码器之间嵌入了 S-CAFM 模块。}
     \label{fig:arch_detail}
 \end{figure}
 
@@ -117,7 +117,7 @@
 
 为了解决这一根本性矛盾，我们并没有沿用传统的通道注意力机制（如 SE Block），因为实验表明：虽然通道注意力能强化特征，但它通过全局平均池化将空间信息压缩为一个标量，往往导致位置信息（Positional Information）的不可逆丢失。
 
-\textbf{为了解决这个问题，我们引入了**Spatial-Coordinate Attention Fusion Module (S-CAFM)** \cite{hou2021coordinate}。
+为了解决这个问题，我们引入了 \textbf{Spatial-Coordinate Attention Fusion Module (S-CAFM)} \cite{hou2021coordinate}。
 
 \textbf{简单的形状规则}：道路场景很有规律。车道线和护栏通常是水平的，而行人、路灯则是垂直的。传统的注意力机制（如 SE 或 CBAM）会把这些形状信息压缩成一个点，丢失了位置信息。相反，S-CAFM 机制保留了这些信息。它通过在水平和垂直两个方向上分别处理特征，建立了**空间索引**。S-CAFM 的核心思想是：**分别沿着 X 轴和 Y 轴处理特征**。
 

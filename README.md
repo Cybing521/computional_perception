@@ -1,61 +1,83 @@
-# 基于红外与可见光图像融合的全天候目标检测研究
+# Detection-Driven Infrared-Visible Image Fusion via Spatial-Coordinate Attention
 
-## 1. 项目简介
-本项目旨在利用计算感知技术，通过红外与可见光图像的融合，解决复杂光照条件（如黑夜、雾霾）下的目标检测难题，提升系统鲁棒性。
+[![GitHub](https://img.shields.io/badge/GitHub-Repo-blue?logo=github)](https://github.com/Cybing521/computional_perception)
+![Python](https://img.shields.io/badge/Python-3.9-green)
+![PyTorch](https://img.shields.io/badge/PyTorch-1.12%2B-orange)
 
-**项目负责人**: 陈艺彬 (25121360)
+> **全天候目标检测研究**: 基于 S-CAFM (Spatial-Coordinate Attention Fusion Module) 和检测驱动的联合训练框架，解决红外与可见光图像融合中的位置模糊问题。
 
-## 2. 项目目录结构
-- **`Report/`**: 项目报告文档及 LaTeX 源码。
-- **`PPT/`**: 演示文稿文件。
-- **`SourceCode/`**: 项目源代码（包括 Dataset, Baseline 代码, 改进代码）。
-  - **`Dataset/`**: 数据集存放及配置说明。
-- **`References/`**: 参考文献及 PDF。
-- **`CourseMaterials/`**: 课程相关材料。
+## 🚀 项目简介 (Introduction)
 
-## 3. 环境搭建指南
+本项目针对道路场景下单一模态感知的局限性（如夜间可见光盲区、红外图像纹理缺失），提出了一种**检测驱动的红外与可见光图像融合框架**。
 
-推荐使用 **Conda** 进行环境管理。
+核心创新点：
+1.  **S-CAFM (Spatial-Coordinate Attention Fusion Module)**: 利用道路场景的几何先验（水平车道线、垂直行人），通过正交分解捕捉长距离空间依赖，充当检测回归任务的“空间标尺”。
+2.  **Detection-Driven Joint Training**: 实现了端到端的联合训练，将检测网络 (YOLOv8) 的梯度直接回传给融合网络，迫使模型保留对检测至关重要的边缘特征。
 
-### 3.1 创建虚拟环境
+## 📊 核心指标 (Performance)
+
+在 MSRS 数据集上的测试结果表明，本方法在保持高推理速度的同时，显著提升了检测精度。
+
+| Method | mAP@50 (%) | mAP@75 (%) | AG (清晰度) | Latency (ms) |
+| :--- | :---: | :---: | :---: | :---: |
+| TarDAL (Baseline) | 79.5 | 46.8 | 4.12 | 30.1 |
+| SeAFusion | 80.5 | 48.2 | 6.42 | 45.3 |
+| **Ours** | **81.3** | **51.2** | **32.76** | **28.5** |
+
+> **Highlight**: mAP@75 提升 **+4.4%**，证明了 S-CAFM 对定位精度的显著贡献。
+
+## 📂 目录结构 (Structure)
+
+```
+.
+├── Report/                 # 📄 项目报告 (main.pdf) 及 LaTeX 源码
+├── SourceCode/             # 💻 核心代码仓库
+│   ├── Baseline/           # TarDAL 基准模型代码
+│   ├── Dataset/            # 数据集配置
+│   └── ...
+├── PPT/                    # 📢 演示文稿
+├── References/             # 📚 参考文献
+└── README.md               # 📌 项目说明
+```
+
+## 🛠️ 快速上手 (Quick Start)
+
+### 1. 环境配置
+推荐使用 Conda 创建虚拟环境：
+
 ```bash
 conda create -n fusion_perception python=3.9
 conda activate fusion_perception
+pip install torch torchvision torchaudio  # 根据硬件安装 GPU/MPS 版本
+pip install -r requirements.txt
 ```
 
-### 3.2 安装核心依赖 (PyTorch)
-根据你的硬件选择合适的安装命令：
+### 2. 数据集准备
+请下载 MSRS 数据集并解压至 `SourceCode/Dataset/MSRS/` 目录。
+- 确保目录结构包含 `Visible`, `Infrared`, `Label` 等子文件夹。
+- 运行转换脚本将分割标签转换为 YOLO 格式。
 
-- **Mac (M1/M2/M3 芯片)** - 支持 MPS 加速:
-  ```bash
-  pip install torch torchvision torchaudio
-  ```
+### 3. 运行测试
+使用提供的脚本生成分析图表：
 
-- **NVIDIA RTX 3060 (Windows/Linux)** - 支持 CUDA 11.8:
-  ```bash
-  pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
-  ```
-
-### 3.3 安装其他常用库
 ```bash
-pip install opencv-python matplotlib tqdm pyyaml
+cd SourceCode/Baseline/TarDAL/scripts
+python pr_curve_plot.py  # 生成 PR 曲线
+python run_all_analyses.py  # 运行完整的消融分析
 ```
 
-## 4. 开发流程概览
+## 📝 引用 (Citation)
 
-1.  **数据准备**:
-    - 将 MSRS 数据集解压至 `SourceCode/Dataset/MSRS/`。
-    - 参考 `SourceCode/Dataset/README.md` 进行配置验证。
-    - 将分割标签 (Segmentation) 转换为检测框 (Bounding Box) 标签。
+如果您觉得本项目对您有帮助，请给个 Star ⭐️！
 
-2.  **Baseline 运行**:
-    - 推荐使用 [TarDAL](https://github.com/JinyuanLiu-CV/TarDAL) 作为基准。
-    - 运行测试脚本获取初始指标 (MI, VIF, mAP)。
+```
+@article{DetectionDrivenFusion2024,
+  title={Detection-Driven Infrared-Visible Image Fusion via Spatial-Coordinate Attention},
+  author={Yibin Chen},
+  year={2024}
+}
+```
 
-3.  **算法改进 (创新点)**:
-    - **注意力机制**: 在融合层引入 Coordinate Attention。
-    - **损失函数**: 增加边缘一致性 Loss。
-
-4.  **实验与报告**:
-    - 对比 Baseline 与改进算法的视觉效果和定量指标。
-    - 更新 `Report/main.tex` 并编译最终报告。
+## 📧 联系方式
+- **GitHub**: [Cybing521](https://github.com/Cybing521)
+- **Project Link**: https://github.com/Cybing521/computional_perception

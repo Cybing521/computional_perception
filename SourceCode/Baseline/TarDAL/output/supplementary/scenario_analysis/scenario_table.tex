@@ -1,0 +1,17 @@
+
+\begin{table}[H]
+    \centering
+    \caption{场景细分检测性能对比（白天 vs 夜晚）}
+    \label{tab:scenario_analysis}
+    \begin{tabular}{l|cc|cc}
+        \toprule
+        \multirow{2}{*}{\textbf{Method}} & \multicolumn{2}{c|}{\textbf{Daytime}} & \multicolumn{2}{c}{\textbf{Nighttime}} \\
+        & mAP@50 & mAP@75 & mAP@50 & mAP@75 \\
+        \midrule
+        IR-only & 70.2 & 38.5 & 78.2 & 44.5 \\
+        VI-only & 75.5 & 40.2 & 61.5 & 30.2 \\
+        Baseline & 78.2 & 44.8 & 80.8 & 48.8 \\
+        \textbf{Ours} & \textbf{80.5} & \textbf{47.2} & \textbf{82.1} & \textbf{49.2} \\
+        \bottomrule
+    \end{tabular}
+\end{table}

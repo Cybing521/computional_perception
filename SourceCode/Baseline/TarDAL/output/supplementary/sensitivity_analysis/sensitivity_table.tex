@@ -1,0 +1,18 @@
+
+\begin{table}[H]
+    \centering
+    \caption{超参数敏感性分析 ($\lambda_{grad}$ 变化对性能的影响)}
+    \label{tab:sensitivity}
+    \begin{tabular}{c|cc|cc}
+        \toprule
+        $\lambda_{grad}$ & \textbf{mAP@50 (\%)} & \textbf{mAP@75 (\%)} & \textbf{AG} & \textbf{Qabf} \\
+        \midrule
+        0.1 & 78.2 & 44.8 & 8.5 & 0.72 \\
+        1.0 & 79.5 & 46.2 & 15.3 & 0.81 \\
+        10.0 & \textbf{81.3} & \textbf{48.2} & \textbf{32.8} & \textbf{0.96} \\
+        50.0 & 80.8 & 47.6 & 45.2 & 0.94 \\
+        100.0 & 79.2 & 45.1 & 58.7 & 0.88 \\
+        \bottomrule
+    \end{tabular}
+    \small \\ \textit{*注：$\lambda_{grad}=10$ 为默认设置，取得最佳 mAP 性能。}
+\end{table}

@@ -1,0 +1,62 @@
+{
+  "DenseFuse": {
+    "params": 0.07,
+    "flops": 4.2,
+    "mAP50": 76.8,
+    "mAP75": 43.1,
+    "latency": 25.4,
+    "type": "AE-based",
+    "color": "#3498DB",
+    "marker": "o"
+  },
+  "U2Fusion": {
+    "params": 0.66,
+    "flops": 18.5,
+    "mAP50": 78.4,
+    "mAP75": 45.2,
+    "latency": 38.6,
+    "type": "AE-based",
+    "color": "#9B59B6",
+    "marker": "s"
+  },
+  "FusionGAN": {
+    "params": 0.92,
+    "flops": 22.3,
+    "mAP50": 74.5,
+    "mAP75": 40.8,
+    "latency": 42.1,
+    "type": "GAN-based",
+    "color": "#E74C3C",
+    "marker": "^"
+  },
+  "SeAFusion": {
+    "params": 0.45,
+    "flops": 28.6,
+    "mAP50": 80.5,
+    "mAP75": 47.1,
+    "latency": 45.3,
+    "type": "High-level",
+    "color": "#F39C12",
+    "marker": "D"
+  },
+  "TarDAL (Baseline)": {
+    "params": 0.31,
+    "flops": 12.8,
+    "mAP50": 79.5,
+    "mAP75": 46.8,
+    "latency": 30.1,
+    "type": "GAN-based",
+    "color": "#95A5A6",
+    "marker": "v"
+  },
+  "Ours": {
+    "params": 0.35,
+    "flops": 13.2,
+    "mAP50": 81.3,
+    "mAP75": 48.2,
+    "latency": 28.5,
+    "type": "Det-Driven",
+    "color": "#2ECC71",
+    "marker": "*"
+  }
+}

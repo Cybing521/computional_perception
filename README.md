@@ -66,18 +66,29 @@ python pr_curve_plot.py  # 生成 PR 曲线
 python run_all_analyses.py  # 运行完整的消融分析
 ```
 
+
+## 💐 致谢与引用 (Acknowledgements)
+
+本项目在开发过程中引用了优秀的开源工作，特此感谢：
+
+### 1. 数据集支持
+*   **MSRS (Multi-Spectral Road Scenarios)**:
+    *   **链接**: [https://github.com/Curtis007/MSRS](https://github.com/Curtis007/MSRS)
+    *   **作用**: 本项目使用了 MSRS 提供的 1444 对高质量红外-可见光图像及其语义分割标签（经转换后用于检测），作为核心训练与评估数据。
+
+### 2. 代码框架支持
+*   **TarDAL (Target-aware Dual Adversarial Learning)**:
+    *   **链接**: [https://github.com/LiuZhuang1996/TarDAL](https://github.com/LiuZhuang1996/TarDAL) (CVPR 2022)
+    *   **作用**: 本项目基于 TarDAL 优秀的对抗学习框架进行二次开发，保留了其检测驱动的 loss 设计思路，并在此基础上集成了 S-CAFM 模块以增强空间位置感知。
+
+---
+
 ## 📝 引用 (Citation)
 
 如果您觉得本项目对您有帮助，请给个 Star ⭐️！
 
-```
-@article{DetectionDrivenFusion2024,
-  title={Detection-Driven Infrared-Visible Image Fusion via Spatial-Coordinate Attention},
-  author={Yibin Chen},
-  year={2024}
-}
-```
 
 ## 📧 联系方式
 - **GitHub**: [Cybing521](https://github.com/Cybing521)
+- **Email**: 25121360@bjtu.edu.cn
 - **Project Link**: https://github.com/Cybing521/computional_perception
